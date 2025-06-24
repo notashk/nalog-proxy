@@ -1,12 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Only POST is allowed' });
+  }
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-
-app.post('/api/proxy', async (req, res) => {
   const { url, method = 'GET', headers = {}, body } = req.body;
 
   try {
@@ -17,19 +13,15 @@ app.post('/api/proxy', async (req, res) => {
     });
 
     const contentType = fetchResponse.headers.get('content-type');
+
     if (contentType && contentType.includes('application/json')) {
       const data = await fetchResponse.json();
-      res.json(data);
+      res.status(200).json(data);
     } else {
       const text = await fetchResponse.text();
-      res.send(text);
+      res.status(200).send(text);
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}`);
-});
+}
